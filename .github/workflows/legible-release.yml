@@ -1,0 +1,41 @@
+name: Legible release
+
+# Builds the packages Legible installs from this fork and attaches their tarballs to a GitHub release, so Legible
+# depends on them by URL. Publishes nothing to npm.
+on:
+  push:
+    tags:
+      - 'legible-v*'
+
+concurrency:
+  group: legible-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/setup
+        with:
+          install-chromium: false
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Pack
+        run: node .github/legible/pack.mjs "$GITHUB_REF_NAME" "$GITHUB_REPOSITORY" legible-tarballs
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" legible-tarballs/*.tgz \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "StrykerJS packages for Legible, built from ${GITHUB_SHA}." \
+            --prerelease

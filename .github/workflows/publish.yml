@@ -11,6 +11,8 @@ concurrency:
 
 jobs:
   release:
+    # Forks release elsewhere; only upstream publishes to npm.
+    if: github.repository == 'stryker-mutator/stryker-js'
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -76,6 +76,8 @@ export default /** @type {import('typescript-eslint').ConfigArray} */ (
         'e2e/',
         'perf/',
         'helpers/',
+        // The fork's release script, outside every TypeScript project
+        '.github/',
       ],
     },
   )
