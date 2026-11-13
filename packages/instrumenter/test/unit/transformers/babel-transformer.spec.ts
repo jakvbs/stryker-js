@@ -1044,8 +1044,7 @@ describe('babel-transformer', () => {
   });
 
   describe('mutator plugins', () => {
-    it('should place the mutants of a mutator plugin under its name', () => {
-      const ast = createJSAst({ rawContent: 'baz = qux;' });
+    beforeEach(() => {
       context.options.mutators = new Map([
         [
           'Named',
@@ -1053,19 +1052,76 @@ describe('babel-transformer', () => {
             *mutate(path) {
               const node = (path as babel.NodePath).node;
               if (types.isIdentifier(node) && node.name === 'qux') {
-                yield types.identifier('quux');
+                yield {
+                  name: 'qux becomes quux',
+                  replacement: types.identifier('quux'),
+                };
+                yield {
+                  name: 'qux becomes corge',
+                  replacement: types.identifier('corge'),
+                };
               }
             },
           },
         ],
       ]);
+    });
+
+    it('should place each mutant of a mutator plugin under the name of its replacement', () => {
+      const ast = createJSAst({ rawContent: 'baz = qux;' });
       act(ast);
-      expect(mutantCollector.mutants).lengthOf(1);
-      expect(mutantCollector.mutants[0].mutatorName).eq('Named');
-      expect(mutantCollector.mutants[0].replacementCode).eq('quux');
+      expect(
+        mutantCollector.mutants.map(({ mutatorName, replacementCode }) => ({
+          mutatorName,
+          replacementCode,
+        })),
+      ).deep.eq([
+        { mutatorName: 'qux becomes quux', replacementCode: 'quux' },
+        { mutatorName: 'qux becomes corge', replacementCode: 'corge' },
+      ]);
       expect(normalizeWhitespaces(generator(ast.root).code)).contains(
-        '{ baz = quux; baz = qux; }',
+        '{ baz = quux; baz = corge; baz = qux; }',
       );
+    });
+
+    it('should exclude a plugin mutant by its name', () => {
+      context.options.excludedMutations = ['qux becomes corge'];
+      const ast = createJSAst({ rawContent: 'baz = qux;' });
+      act(ast);
+      expect(
+        mutantCollector.mutants.map(({ mutatorName, ignoreReason }) => ({
+          mutatorName,
+          ignoreReason,
+        })),
+      ).deep.eq([
+        { mutatorName: 'qux becomes quux', ignoreReason: undefined },
+        {
+          mutatorName: 'qux becomes corge',
+          ignoreReason:
+            'Ignored because of excluded mutation "qux becomes corge"',
+        },
+      ]);
+    });
+
+    it('should exclude every mutant of a plugin by the plugin name', () => {
+      context.options.excludedMutations = ['Named'];
+      const ast = createJSAst({ rawContent: 'baz = qux;' });
+      act(ast);
+      expect(mutantCollector.mutants).lengthOf(2);
+      expect(mutantCollector.mutants.every((m) => m.ignoreReason)).true;
+    });
+
+    it('should ignore the mutants of a plugin disabled by a comment', () => {
+      const ast = createJSAst({
+        rawContent: '// Stryker disable next-line Named\nbaz = qux;',
+      });
+      act(ast);
+      expect(mutantCollector.mutants).lengthOf(2);
+      expect(
+        mutantCollector.mutants.every(
+          (m) => m.ignoreReason === 'Ignored using a comment',
+        ),
+      ).true;
     });
   });
 

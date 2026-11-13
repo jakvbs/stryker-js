@@ -36,13 +36,7 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
   builtInMutators = allMutators,
   mutantPlacers = allMutantPlacers,
 ) => {
-  const mutators: NodeMutator[] = [
-    ...builtInMutators,
-    ...[...(options.mutators ?? [])].map(([name, plugin]) => ({
-      name,
-      mutate: (path: NodePath) => plugin.mutate(path) as Iterable<types.Node>,
-    })),
-  ];
+  const mutatorPlugins = [...(options.mutators ?? [])];
   // Wrap the AST in a `new File`, so `nodePath.buildCodeFrameError` works
   // https://github.com/babel/babel/issues/11889
   // The File constructor only reads `filename` (and `highlightCode`) from the
@@ -61,7 +55,7 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
   // Create the bookkeeper responsible for the // Stryker ... directives
   const directiveBookkeeper = new DirectiveBookkeeper(
     logger,
-    mutators,
+    [...builtInMutators, ...mutatorPlugins.map(([name]) => ({ name }))],
     originFileName,
   );
 
@@ -70,8 +64,10 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
 
   // Mutant-filter bookkeeping. When no mutator declares a `filter` we bypass
   // all of this and traversal cost matches the unfiltered case.
-  const mutatorsByName = new Map(mutators.map((m) => [m.name, m] as const));
-  const hasAnyMutatorFilter = mutators.some((mutator) => mutator.filter);
+  const mutatorsByName = new Map(
+    builtInMutators.map((m) => [m.name, m] as const),
+  );
+  const hasAnyMutatorFilter = builtInMutators.some((mutator) => mutator.filter);
   // Stack of `mutantCollector.mutants.length` captured on enter. The slice
   // [subtreeStart, mutants.length) on exit yields every mutant collected in
   // the subtree in O(1) — no need to re-traverse descendants.
@@ -263,19 +259,45 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
    * Generate mutants for the current node.
    */
   function* mutate(node: NodePath): Iterable<Mutable> {
-    for (const mutator of mutators) {
-      for (const replacement of mutator.mutate(node, { isExpressionContext })) {
-        yield {
-          replacement,
-          mutatorName: mutator.name,
-          ignoreReason:
-            directiveBookkeeper.findIgnoreReason(
-              node.node.loc!.start.line,
-              mutator.name,
-            ) ??
-            findExcludedMutatorIgnoreReason(mutator.name) ??
-            ignorerBookkeeper.currentIgnoreMessage,
-        };
+    for (const { mutator, mutatorName, replacement } of replacements(node)) {
+      yield {
+        replacement,
+        mutatorName,
+        ignoreReason:
+          directiveBookkeeper.findIgnoreReason(
+            node.node.loc!.start.line,
+            mutator,
+          ) ??
+          findExcludedMutatorIgnoreReason(mutator) ??
+          findExcludedMutatorIgnoreReason(mutatorName) ??
+          ignorerBookkeeper.currentIgnoreMessage,
+      };
+    }
+
+    /**
+     * Each replacement with the mutator that made it and the name its mutant reports: a built-in mutator's own name,
+     * or the name a mutator plugin gave the replacement.
+     */
+    function* replacements(path: NodePath) {
+      for (const mutator of builtInMutators) {
+        for (const replacement of mutator.mutate(path, {
+          isExpressionContext,
+        })) {
+          yield {
+            mutator: mutator.name,
+            mutatorName: mutator.name,
+            replacement,
+          };
+        }
+      }
+      for (const [mutator, plugin] of mutatorPlugins) {
+        for (const { name, replacement } of plugin.mutate(path)) {
+          yield {
+            mutator,
+            mutatorName: name,
+            replacement: replacement as types.Node,
+          };
+        }
       }
     }
 

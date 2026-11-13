@@ -8,9 +8,19 @@ import type { NodePath } from '../ignore/index.js';
 export interface MutatorNode {}
 
 /**
+ * A replacement a mutator plugin yields, with the name its mutant reports as `mutatorName` in reports and the
+ * incremental file.
+ */
+export interface MutatorReplacement {
+  name: string;
+  replacement: MutatorNode;
+}
+
+/**
  * A mutator plugin supplies mutants beside Stryker's own mutators. The instrumenter calls it for every node it visits
- * and places each replacement it yields into the mutant schemata, under the plugin's name.
+ * and places each replacement it yields into the mutant schemata. `// Stryker disable` comments name the plugin;
+ * `mutator.excludedMutations` takes the plugin's name or a replacement's name.
  */
 export interface Mutator {
-  mutate(path: NodePath): Iterable<MutatorNode>;
+  mutate(path: NodePath): Iterable<MutatorReplacement>;
 }

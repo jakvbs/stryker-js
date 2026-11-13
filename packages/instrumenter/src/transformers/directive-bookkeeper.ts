@@ -67,7 +67,7 @@ export class DirectiveBookkeeper {
 
   constructor(
     private readonly logger: Logger,
-    private readonly allMutators: NodeMutator[],
+    private readonly allMutators: Array<Pick<NodeMutator, 'name'>>,
     private readonly originFileName: string,
   ) {
     this.allMutatorNames = this.allMutators.map((x) => x.name.toLowerCase());
