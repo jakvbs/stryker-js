@@ -1199,9 +1199,6 @@ importers:
       '@babel/preset-typescript':
         specifier: ~8.0.0
         version: 8.0.1(@babel/core@8.0.1)
-      '@babel/traverse':
-        specifier: ~8.0.4
-        version: 8.0.4
       '@stryker-mutator/api':
         specifier: workspace:*
         version: link:../api
@@ -10666,6 +10663,7 @@ packages:
   image-size@0.5.5:
     resolution: {integrity: sha512-6TDAlDPZxUFCv+fuOkIoXT/V/f3Qbq8e37p+YOiYrUv3v9cc3/6x78VdfPgFVaB9dZYeLUfKgHRebpkm/oP2VQ==}
     engines: {node: '>=0.10.0'}
+    deprecated: Please migrate to image-size@2.x
     hasBin: true
 
   immer@9.0.21:

@@ -46,7 +46,6 @@
     "@babel/plugin-transform-explicit-resource-management": "^8.0.0",
     "@babel/preset-react": "~8.0.0",
     "@babel/preset-typescript": "~8.0.0",
-    "@babel/traverse": "~8.0.4",
     "@stryker-mutator/api": "workspace:*",
     "@stryker-mutator/util": "workspace:*",
     "angular-html-parser": "~10.11.0",

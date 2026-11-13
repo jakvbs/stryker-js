@@ -1,5 +1,4 @@
-import { File, type NodePath, type types } from '@babel/core';
-import traverse from '@babel/traverse';
+import { File, traverse, type NodePath, type types } from '@babel/core';
 
 import {
   isImportDeclaration,
@@ -37,8 +36,12 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
   mutantPlacers = allMutantPlacers,
 ) => {
   const mutatorPlugins = [...(options.mutators ?? [])];
-  // Wrap the AST in a `new File`, so `nodePath.buildCodeFrameError` works
+  // Wrap the AST in a `new File`, so `nodePath.buildCodeFrameError` works and
+  // `nodePath.hub.file.opts.filename` names the file
   // https://github.com/babel/babel/issues/11889
+  // The traversal must use the `traverse` of the `@babel/core` that made the
+  // File: only that copy finds the File's own program path in its path cache,
+  // while another copy starts the paths on an empty default hub.
   // The File constructor only reads `filename` (and `highlightCode`) from the
   // options at runtime, but since Babel 8 its type requires a fully resolved
   // options object, hence the cast.

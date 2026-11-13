@@ -1084,6 +1084,34 @@ describe('babel-transformer', () => {
       );
     });
 
+    it('should hand a mutator plugin paths that name the file', () => {
+      const fileNames = new Set<unknown>();
+      context.options.mutators = new Map([
+        [
+          'FileName',
+          {
+            mutate(path) {
+              const { hub } = path as babel.NodePath;
+              fileNames.add(
+                (hub as unknown as { file: babel.File }).file.opts.filename,
+              );
+              return [];
+            },
+          },
+        ],
+      ]);
+      // Parsed as the instrumenter's parser does, without the test helpers' own File around the AST.
+      const rawContent = 'baz = qux;';
+      act(
+        createJSAst({
+          originFileName: 'src/qux.js',
+          rawContent,
+          root: babel.parseSync(rawContent, undefined)!,
+        }),
+      );
+      expect([...fileNames]).deep.eq(['src/qux.js']);
+    });
+
     it('should exclude a plugin mutant by its name', () => {
       context.options.excludedMutations = ['qux becomes corge'];
       const ast = createJSAst({ rawContent: 'baz = qux;' });

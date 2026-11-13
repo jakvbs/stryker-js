@@ -19,7 +19,8 @@ export interface MutatorReplacement {
 /**
  * A mutator plugin supplies mutants beside Stryker's own mutators. The instrumenter calls it for every node it visits
  * and places each replacement it yields into the mutant schemata. `// Stryker disable` comments name the plugin;
- * `mutator.excludedMutations` takes the plugin's name or a replacement's name.
+ * `mutator.excludedMutations` takes the plugin's name or a replacement's name. A path's `hub.file.opts.filename` names
+ * the file being mutated.
  */
 export interface Mutator {
   mutate(path: NodePath): Iterable<MutatorReplacement>;
