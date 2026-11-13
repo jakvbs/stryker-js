@@ -51,10 +51,11 @@ describe('runResultHelpers', () => {
       expect(actual).deep.eq(expected);
     });
 
-    it('should report all failed tests as "killed" by default', () => {
+    it('should report all failed tests as "killed" by default, with the name and message of each', () => {
       const expected: MutantRunResult = {
         status: MutantRunStatus.Killed,
-        failureMessage: 'expected foo to be bar',
+        failureMessage:
+          'error: expected foo to be bar\nerror: expected this to be that',
         killedBy: ['42', '43'],
         nrOfTests: 4,
         duration: 168,

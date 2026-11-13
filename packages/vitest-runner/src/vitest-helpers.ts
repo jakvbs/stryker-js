@@ -50,8 +50,9 @@ export function convertTestToTestResult(
     return {
       ...baseTestResult,
       status,
-      failureMessage:
-        test.result?.errors?.[0]?.message ?? 'StrykerJS: Unknown test failure',
+      failureMessage: test.result?.errors?.[0]
+        ? describeError(test.result.errors[0])
+        : 'StrykerJS: Unknown test failure',
     };
   } else if (status === TestStatus.Skipped) {
     const suiteError = findSuiteError(test.suite);
@@ -128,6 +129,11 @@ export function isErrorCodeError(
   return (
     error instanceof Error && 'code' in error && typeof error.code === 'string'
   );
+}
+
+/** An error's message after its name, such as `AssertionError: expected 1 to be 2`, so a report tells an assertion from a throw. */
+function describeError({ name, message }: { name?: string; message: string }) {
+  return name ? `${name}: ${message}` : message;
 }
 
 /** @see https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/errors.ts */

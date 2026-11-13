@@ -38,7 +38,9 @@ export function toMutantRunResult(
       if (failedTests.length > 0) {
         return {
           status: MutantRunStatus.Killed,
-          failureMessage: failedTests[0].failureMessage,
+          failureMessage: reportAllKillers
+            ? failureMessageOf(failedTests)
+            : failedTests[0].failureMessage,
           killedBy: reportAllKillers
             ? failedTests.map<string>((test) => test.id)
             : [failedTests[0].id],
@@ -64,4 +66,16 @@ export function toMutantRunResult(
         reason: dryRunResult.reason,
       };
   }
+}
+
+/**
+ * The failure message of a killed mutant: the one failed test's message, or each failed test's name and message on a
+ * line of its own, so a report shows why every killer failed.
+ */
+function failureMessageOf(failedTests: FailedTestResult[]): string {
+  return failedTests.length === 1
+    ? failedTests[0].failureMessage
+    : failedTests
+        .map((test) => `${test.name}: ${test.failureMessage}`)
+        .join('\n');
 }

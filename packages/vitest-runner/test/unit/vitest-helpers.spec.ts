@@ -22,6 +22,19 @@ describe('vitest-helpers', () => {
   });
 
   describe(convertTestToTestResult.name, () => {
+    it('should name the error a failed test threw before its message', () => {
+      const test = createVitestTest({
+        result: {
+          state: 'fail',
+          errors: [{ name: 'AssertionError', message: 'expected 1 to be 2' }],
+        },
+      });
+      const result = convertTestToTestResult(test);
+      expect((result as FailedTestResult).failureMessage).to.be.equal(
+        'AssertionError: expected 1 to be 2',
+      );
+    });
+
     describe('taskState of test is skipped', () => {
       it('should have status skipped', () => {
         const test = createVitestTest({ result: { state: 'skip' } });
