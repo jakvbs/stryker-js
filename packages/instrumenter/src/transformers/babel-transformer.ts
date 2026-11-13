@@ -33,9 +33,16 @@ export const transformBabel: AstTransformer<ScriptFormat> = (
   { root, originFileName, rawContent, offset },
   mutantCollector,
   { options, mutateDescription, logger, isExpressionContext },
-  mutators = allMutators,
+  builtInMutators = allMutators,
   mutantPlacers = allMutantPlacers,
 ) => {
+  const mutators: NodeMutator[] = [
+    ...builtInMutators,
+    ...[...(options.mutators ?? [])].map(([name, plugin]) => ({
+      name,
+      mutate: (path: NodePath) => plugin.mutate(path) as Iterable<types.Node>,
+    })),
+  ];
   // Wrap the AST in a `new File`, so `nodePath.buildCodeFrameError` works
   // https://github.com/babel/babel/issues/11889
   // The File constructor only reads `filename` (and `highlightCode`) from the

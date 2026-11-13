@@ -250,8 +250,15 @@ export class StrykerServer {
       const ignorers = options.ignorers.map((name) =>
         pluginCreator.create(PluginKind.Ignore, name),
       );
+      const mutators = new Map(
+        options.mutators.map((name) => [
+          name,
+          pluginCreator.create(PluginKind.Mutator, name),
+        ]),
+      );
       const instrumentResult = await instrumenter.instrument(filesToMutate, {
         ignorers,
+        mutators,
         ...options.mutator,
       });
       const mutants = instrumentResult.mutants.map((mutant) => ({

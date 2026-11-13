@@ -9,6 +9,7 @@ import { TestRunner } from '../test-runner/index.js';
 import { Checker } from '../check/index.js';
 
 import { Ignorer } from '../ignore/ignorer.js';
+import { Mutator } from '../mutate/mutator.js';
 
 import { PluginContext } from './contexts.js';
 import { PluginKind } from './plugin-kind.js';
@@ -145,6 +146,7 @@ export interface PluginInterfaces {
   [PluginKind.TestRunner]: TestRunner;
   [PluginKind.Checker]: Checker;
   [PluginKind.Ignore]: Ignorer;
+  [PluginKind.Mutator]: Mutator;
 }
 
 /**

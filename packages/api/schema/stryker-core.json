@@ -514,6 +514,14 @@
       },
       "default": []
     },
+    "mutators": {
+      "description": "Specify which mutator plugins to use beside Stryker's own mutators. A mutator plugin yields replacement nodes for the nodes the instrumenter visits; each becomes a mutant named after the plugin.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "testFiles": {
       "description": "With `testFiles` you can limit which test files are executed during mutation testing. When specified, only tests from these files will be run, allowing you to verify that a module's dedicated unit tests can kill all its mutants independently. Glob patterns are supported.",
       "type": "array",

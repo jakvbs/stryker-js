@@ -67,9 +67,15 @@ export class MutantInstrumenterExecutor {
     const ignorers = this.options.ignorers.map((name) =>
       this.pluginCreator.create(PluginKind.Ignore, name),
     );
+    const mutators = new Map(
+      this.options.mutators.map((name) => [
+        name,
+        this.pluginCreator.create(PluginKind.Mutator, name),
+      ]),
+    );
     const instrumentResult = await instrumenter.instrument(
       await this.readFilesToMutate(),
-      { ignorers, ...this.options.mutator },
+      { ignorers, mutators, ...this.options.mutator },
     );
 
     // Preprocess the project

@@ -108,6 +108,7 @@ describe(MutantInstrumenterExecutor.name, () => {
     const expectedInstrumenterOptions: InstrumenterOptions = {
       ...testInjector.options.mutator,
       ignorers: [],
+      mutators: new Map(),
     };
     sinon.assert.calledOnceWithExactly(
       instrumenterMock.instrument,
@@ -126,6 +127,7 @@ describe(MutantInstrumenterExecutor.name, () => {
     const expectedInstrumenterOptions: InstrumenterOptions = {
       ...testInjector.options.mutator,
       ignorers: [notIgnorer],
+      mutators: new Map(),
     };
     sinon.assert.calledOnceWithExactly(
       instrumenterMock.instrument,

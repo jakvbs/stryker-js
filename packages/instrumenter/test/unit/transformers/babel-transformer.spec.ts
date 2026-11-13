@@ -1043,6 +1043,32 @@ describe('babel-transformer', () => {
     });
   });
 
+  describe('mutator plugins', () => {
+    it('should place the mutants of a mutator plugin under its name', () => {
+      const ast = createJSAst({ rawContent: 'baz = qux;' });
+      context.options.mutators = new Map([
+        [
+          'Named',
+          {
+            *mutate(path) {
+              const node = (path as babel.NodePath).node;
+              if (types.isIdentifier(node) && node.name === 'qux') {
+                yield types.identifier('quux');
+              }
+            },
+          },
+        ],
+      ]);
+      act(ast);
+      expect(mutantCollector.mutants).lengthOf(1);
+      expect(mutantCollector.mutants[0].mutatorName).eq('Named');
+      expect(mutantCollector.mutants[0].replacementCode).eq('quux');
+      expect(normalizeWhitespaces(generator(ast.root).code)).contains(
+        '{ baz = quux; baz = qux; }',
+      );
+    });
+  });
+
   function act(ast: ScriptAst) {
     (
       transformBabel as (

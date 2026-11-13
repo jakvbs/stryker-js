@@ -6,4 +6,5 @@ export enum PluginKind {
   TestRunner = 'TestRunner',
   Reporter = 'Reporter',
   Ignore = 'Ignore',
+  Mutator = 'Mutator',
 }
